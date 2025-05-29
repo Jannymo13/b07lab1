@@ -1,5 +1,7 @@
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class Polynomial {
     double[] coefficients;
@@ -17,48 +19,92 @@ public class Polynomial {
         this.exponents = exponents;
     }
 
-    private void addToDict(Dictionary<Integer,Double> dict, int i, double d){
-        if (dict.get(i) == null){
-            dict.put(i,d);
-        } else {
-            dict.put(i,dict.get(i) + d);
+    public Polynomial(File file) throws FileNotFoundException {
+        Scanner s = new Scanner(file);
+
+        if (!s.hasNext()){
+            throw new FileNotFoundException();
+        }
+
+        String data = s.nextLine();
+        String[] terms;
+
+        data = data.replaceAll("-"," -");
+        data = data.replaceAll("\\+"," +").strip();
+        if (data.charAt(0) != '-' && data.charAt(0) != '+'){
+            data = String.join("", "+", data);
+        }
+
+        terms = data.split(" ");
+
+        this.coefficients = new double[terms.length];
+        this.exponents = new int[terms.length];
+        int index = 0;
+
+        for (String term : terms) {
+            if (term.isEmpty()) continue;
+
+            // constant value
+            if (!term.contains("x")) {
+                this.coefficients[index] = Double.parseDouble(term);
+                this.exponents[index++] = 0;
+                continue;
+            }
+
+            String[] splitTerm = term.split("x"); //split term into coefficient and exponent
+
+            //coefficient
+            if (Objects.equals(splitTerm[0], "+")){
+                this.coefficients[index] = 1;
+            } else if (Objects.equals(splitTerm[0], "-")) {
+                this.coefficients[index] = -1;
+            } else {
+                this.coefficients[index] = Double.parseDouble(splitTerm[0]);
+            }
+
+            //exponent
+            if (splitTerm.length == 1){
+                this.exponents[index] = 1;
+            } else {
+                this.exponents[index] = Integer.parseInt(splitTerm[1]);
+            }
+
+            index++;
         }
     }
 
-    public Polynomial add(Polynomial poly2) {
-        Dictionary<Integer,Double> coeff = new Hashtable<>();
+    public Polynomial add(Polynomial poly) {
+        Map<Integer,Double> coeff = new HashMap<>();
+        int index = 0;
 
-
-        int i1 = 0;
-        int i2 = 0;
-
-        int len1 = this.exponents.length;
-        int len2 = poly2.exponents.length;
-
-        while (i1 < len1 && i2 < len2){
-            if (this.exponents[i1] < poly2.exponents[i2]){
-                this.addToDict(coeff, i1, this.exponents[i1]);
-                i1++;
-            } else {
-                this.addToDict(coeff, i1, this.exponents[i1]);
-                i2++;
-            }
+        // get coefficients and exponents and add them to the map
+        for (index = 0; index < this.exponents.length; index++){
+            coeff.merge(this.exponents[index], this.coefficients[index], Double::sum);
         }
-        while (i1 < len1){
-            System.out.println("i1!");
-            i1++;
+        for (index = 0; index < poly.exponents.length; index++){
+            coeff.merge(poly.exponents[index], poly.coefficients[index], Double::sum);
         }
-        while (i2 < len2){
-            System.out.println("i2!");
-            i2++;
+
+        // turn the hash map into paired arrays of keys and values
+        int[] newExponents = new int[coeff.size()];
+        double[] newCoefficients = new double[coeff.size()];
+        index = 0;
+
+        for (int i : coeff.keySet()){
+            newExponents[index++] = i;
         }
-        return null;
+
+        for (index = 0; index < newExponents.length; index++){
+            newCoefficients[index] = coeff.get(newExponents[index]);
+        }
+
+        return new Polynomial(newCoefficients, newExponents);
     }
 
     public double evaluate(double value) {
         double total = 0;
         for (int i = 0; i < this.coefficients.length; i++) {
-            total += this.coefficients[i] * (Math.pow(value, i));
+            total += this.coefficients[i] * (Math.pow(value, this.exponents[i]));
         }
         return total;
     }
@@ -67,6 +113,42 @@ public class Polynomial {
 
         return this.evaluate(root) == 0;
     }
+
+    public void printPolynomial(){
+        for (int i = 0; i < this.exponents.length; i++){
+            System.out.println(this.coefficients[i] + "x^"+ this.exponents[i]);
+        }
+    }
+
+    public Polynomial multiply(Polynomial poly){
+        Polynomial result = new Polynomial();
+
+        int currentExp;
+        double currentCoef;
+
+        for (int i = 0; i < this.exponents.length; i++){
+            currentExp = this.exponents[i];
+            currentCoef = this.coefficients[i];
+            int[] newExp = poly.exponents.clone();
+            double[] newCoef = poly.coefficients.clone();
+
+            for (int j = 0; j < newExp.length; j++){
+                newExp[j] += currentExp;
+                newCoef[j] *= currentCoef;
+            }
+
+            Polynomial newPoly = new Polynomial(newCoef, newExp);
+
+            result = result.add(newPoly);
+        }
+        return result;
+    }
+
+    public void saveToFile(String fileName){
+        String result;
+    }
 }
+
+
 
 
