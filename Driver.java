@@ -1,6 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
+import java.io.IOException;
 
 public class Driver {
     public static void main(String [] args) {
@@ -28,12 +28,20 @@ public class Driver {
         System.out.println("p1 * p2");
         p1.multiply(p2).printPolynomial();
 
-        File f = new File("test.txt");
+        File file = new File("test.txt");
         try {
-            new Polynomial(f);
+            Polynomial f = new Polynomial(file);
+            System.out.println();
+            f.printPolynomial();
+            try {
+                f.saveToFile("output.txt");
+            } catch (IOException e){
+                System.out.println("Couldn't write file");
+            }
         } catch (FileNotFoundException e){
             System.out.println("File Not Found or Empty File");
         }
+
 
     }
 }

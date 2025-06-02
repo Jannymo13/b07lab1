@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Polynomial {
@@ -23,7 +24,9 @@ public class Polynomial {
         Scanner s = new Scanner(file);
 
         if (!s.hasNext()){
-            throw new FileNotFoundException();
+            this.coefficients = new double[]{};
+            this.exponents = new int[]{};
+            return;
         }
 
         String data = s.nextLine();
@@ -144,8 +147,53 @@ public class Polynomial {
         return result;
     }
 
-    public void saveToFile(String fileName){
+    public void saveToFile(String fileName) throws IOException {
+        FileWriter writer = new FileWriter(fileName);
         String result;
+
+        if (this.coefficients.length == 0) {
+            writer.write("0");
+            writer.close();
+        }
+
+        if (this.coefficients[0] == (int) this.coefficients[0]) {
+            result = Integer.toString((int) this.coefficients[0]);
+        } else {
+            result = Double.toString(this.coefficients[0]);
+        }
+
+        if (this.exponents[0] != 0){
+            result = String.join("",result,"x");
+        }
+        if (this.exponents[0] != 1){
+            result = String.join("", result,Integer.toString(this.exponents[0]));
+        }
+
+        for (int i = 1; i < this.exponents.length; i++){
+            if (this.coefficients[i] > 0){
+                result = String.join("",result,"+");
+            }
+
+            if (this.coefficients[i] == (int) this.coefficients[i]) {
+                result = String.join("", result, Integer.toString((int) this.coefficients[i]));
+            } else {
+                result = String.join("", result, Double.toString(this.coefficients[i]));
+            }
+
+
+            if (this.exponents[i] != 0){
+                result = String.join("",result,"x");
+                if (this.exponents[i] != 1){
+                    result = String.join("", result,Integer.toString(this.exponents[i]));
+                }
+            }
+
+        }
+
+        writer.write(result);
+        writer.close();
+
+
     }
 }
 
